@@ -1,71 +1,573 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>聊天记录查看器</title>
-  <!-- 引入Tailwind核心样式 -->
-  <link href="https://cdn.tailwindcss.com" rel="stylesheet">
-  <!-- 引入Font Awesome -->
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-  <!-- 引入xlsx库 -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- 引入Tailwind配置依赖（如果需要） -->
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100">
-  <!-- 这里添加你的页面内容，例如聊天窗口 -->
-  <div class="max-w-md mx-auto mt-8 bg-white rounded-lg shadow-card p-4">
-    <h1 class="text-xl font-bold text-primary">聊天记录</h1>
-    <div class="mt-4">
-      <!-- 示例：收到的消息 -->
-      <div class="flex mb-4">
-        <div class="bg-chat-received p-3 rounded-lg rounded-tl-none">
-          你好！这是一条收到的消息
-        </div>
-      </div>
-      <!-- 示例：发送的消息 -->
-      <div class="flex justify-end mb-4">
-        <div class="bg-chat-sent p-3 rounded-lg rounded-tr-none text-white">
-          你好！这是一条发送的消息
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 配置Tailwind自定义主题 -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1677ff',
-            secondary: '#0f6c62',
-            chat: {
-              sent: '#000b42a', // 注意：原代码中这里可能多了一个字符，建议检查格式（应为6位16进制）
-              received: '#5f5f3f'
-            },
-            neutral: {
-              100: '#f5f5f5',
-              200: '#e5e5e5',
-              300: '#d4d4d4',
-              400: '#a3a3a3',
-              500: '#737373',
-              600: '#525252',
-              700: '#404040',
-              800: '#262626',
-              900: '#171717',
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天记录查看器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色和字体 -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1677ff',
+                        secondary: '#0fc6c2',
+                        chat: {
+                            sent: '#00b42a',
+                            received: '#f3f3f3',
+                            dark: {
+                                sent: '#00c853',
+                                received: '#333333'
+                            }
+                        },
+                        neutral: {
+                            100: '#f5f5f5',
+                            200: '#e5e5e5',
+                            300: '#d4d4d4',
+                            400: '#a3a3a3',
+                            500: '#737373',
+                            600: '#525252',
+                            700: '#404040',
+                            800: '#262626',
+                            900: '#171717',
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'card': '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                        'hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    }
+                },
             }
-          },
-          fontFamily: {
-            inter: ['Inter', 'system-ui', 'sans-serif'],
-          },
-          boxShadow: {
-            'card': '0 1px 2px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-            'hover': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-          }
-        },
-      }
-    }
-  </script>
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .chat-bubble-sent {
+                @apply bg-chat-sent text-white rounded-lg rounded-tr-none p-3 max-w-[70%] ml-auto transition-all duration-200;
+            }
+            .chat-bubble-received {
+                @apply bg-chat-received text-neutral-800 rounded-lg rounded-tl-none p-3 max-w-[70%] mr-auto transition-all duration-200;
+            }
+            .dark .chat-bubble-sent {
+                @apply bg-chat-dark-sent;
+            }
+            .dark .chat-bubble-received {
+                @apply bg-chat-dark-received text-neutral-100;
+            }
+            .scrollbar-hide {
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .hover-lift {
+                @apply transition-all duration-200 hover:translate-y-[-2px] hover:shadow-hover;
+            }
+            .pulse-on-hover {
+                @apply transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+            }
+            .message-status {
+                @apply text-xs ml-1 opacity-70;
+            }
+        }
+    </style>
+</head>
+<body class="bg-neutral-100 dark:bg-neutral-900 h-screen flex flex-col overflow-hidden font-inter text-neutral-800 dark:text-neutral-100 transition-colors duration-300">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between shadow-sm z-10 transition-colors duration-300">
+        <div class="flex items-center space-x-3">
+            <i class="fa fa-comments text-primary text-2xl"></i>
+            <h1 class="text-xl font-bold">聊天记录查看器</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button id="themeToggle" class="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors duration-200">
+                <i class="fa fa-moon-o dark:hidden text-neutral-600"></i>
+                <i class="fa fa-sun-o hidden dark:inline text-neutral-300"></i>
+            </button>
+            <input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" class="hidden" />
+            <label for="fileUpload" class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg flex items-center cursor-pointer pulse-on-hover">
+                <i class="fa fa-upload mr-2"></i>上传文件
+                <span class="ml-1 text-xs opacity-80">(Excel/CSV)</span>
+            </label>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- 左侧：接收者列表 -->
+        <div id="receiverList" class="w-80 bg-white dark:bg-neutral-800 border-r border-neutral-200 dark:border-neutral-700 overflow-y-auto scrollbar-hide hidden md:block transform transition-transform duration-300 ease-in-out transition-colors duration-300">
+            <!-- 搜索框 -->
+            <div class="p-4 border-b border-neutral-200 dark:border-neutral-700">
+                <div class="relative">
+                    <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400"></i>
+                    <input type="text" id="searchReceiver" placeholder="搜索接收者..." 
+                           class="w-full pl-10 pr-4 py-2.5 rounded-full bg-neutral-100 dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                </div>
+            </div>
+            
+            <!-- 接收者列表容器 -->
+            <div id="receiverItems" class="divide-y divide-neutral-100 dark:divide-neutral-700">
+                <!-- 动态生成接收者项 -->
+            </div>
+        </div>
+
+        <!-- 右侧：聊天窗口 -->
+        <div id="chatWindow" class="flex-1 flex flex-col bg-neutral-50 dark:bg-neutral-900 hidden transition-colors duration-300">
+            <!-- 聊天窗口头部 -->
+            <div class="bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center shadow-sm transition-colors duration-300">
+                <button id="backToList" class="md:hidden mr-2 text-neutral-500 hover:text-primary">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <i class="fa fa-user-circle-o text-neutral-400 mr-3 text-xl"></i>
+                <h2 id="currentReceiverName" class="font-medium text-lg"></h2>
+            </div>
+            
+            <!-- 聊天内容区 -->
+            <div id="messageContainer" class="flex-1 p-6 overflow-y-auto scrollbar-hide space-y-6 bg-[#f9f9f9] dark:bg-neutral-900 transition-colors duration-300">
+                <!-- 动态生成消息 -->
+            </div>
+            
+            <!-- 底部状态栏 -->
+            <div class="bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-3 text-center text-neutral-500 dark:text-neutral-400 text-sm transition-colors duration-300">
+                <span>聊天记录已加载完毕</span>
+            </div>
+        </div>
+
+        <!-- 初始提示 -->
+        <div id="initialTip" class="flex-1 flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400 p-8 transition-colors duration-300">
+            <div class="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                <i class="fa fa-file-text-o text-4xl text-primary"></i>
+            </div>
+            <h3 class="text-xl font-medium mb-2">请上传聊天记录文件</h3>
+            <p class="text-center max-w-md">
+                支持Excel(.xlsx/.xls)和CSV格式，文件需包含4列：发送者uid、接收者uid、双引号包裹的内容、13位时间戳
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let chatData = null;
+        let lastMessageDate = null;
+        let currentReceiver = null;
+
+        // 初始化主题
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // 主题切换
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.theme = 'light';
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.theme = 'dark';
+            }
+        });
+
+        // 移动端返回按钮
+        document.getElementById('backToList').addEventListener('click', () => {
+            if (window.innerWidth < 768) {
+                document.getElementById('chatWindow').classList.add('hidden');
+                document.getElementById('receiverList').classList.remove('hidden');
+            }
+        });
+
+        // 监听窗口大小变化，优化响应式体验
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768 && currentReceiver) {
+                document.getElementById('receiverList').classList.remove('hidden');
+                document.getElementById('chatWindow').classList.remove('hidden');
+            }
+        });
+
+        // 监听文件上传
+        document.getElementById('fileUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {
+                showNotification('请上传Excel（.xlsx/.xls）或CSV（.csv）文件', 'error');
+                return;
+            }
+
+            showNotification('正在解析文件...', 'info');
+            
+            if (fileExt === 'csv') {
+                parseCSV(file);
+            } else {
+                parseExcel(file);
+            }
+        });
+
+        // 解析Excel文件
+        function parseExcel(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: true });
+                    processData(jsonData);
+                } catch (err) {
+                    console.error('Excel解析失败：', err);
+                    showNotification('Excel解析失败，请检查文件格式', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 解析CSV文件
+        function parseCSV(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split(/\r\n|\n/).filter(line => line.trim() !== '');
+                    const jsonData = lines.map(line => {
+                        const columns = [];
+                        let inQuotes = false;
+                        let currentColumn = '';
+                        let quoteCount = 0;
+                        
+                        for (const char of line) {
+                            if (char === '"') {
+                                inQuotes = !inQuotes;
+                                quoteCount++;
+                                currentColumn += char;
+                            } else if (char === ',' && !inQuotes) {
+                                columns.push(currentColumn.trim());
+                                currentColumn = '';
+                            } else {
+                                currentColumn += char;
+                            }
+                        }
+                        columns.push(currentColumn.trim());
+                        return columns;
+                    });
+                    processData(jsonData);
+                } catch (err) {
+                    console.error('CSV解析失败：', err);
+                    showNotification('CSV解析失败，请检查文件格式', 'error');
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        // 处理解析后的数据
+        function processData(jsonData) {
+            if (jsonData.length <= 0) {
+                showNotification('文件为空，无有效数据', 'error');
+                return;
+            }
+
+            const messages = [];
+            for (let i = 0; i < jsonData.length; i++) {
+                const row = jsonData[i];
+                if (!row || row.length < 4) {
+                    console.warn(`第${i+1}行数据不足4列，已跳过`);
+                    continue;
+                }
+
+                const sender = row[0] ? String(row[0]).trim() : '';
+                const receiver = row[1] ? String(row[1]).trim() : '';
+                const contentRaw = row[2] ? String(row[2]).trim() : '';
+                const timeRaw = row[3] ? String(row[3]).trim() : '';
+
+                if (!sender || !receiver || !timeRaw) {
+                    console.warn(`第${i+1}行缺少发送者/接收者/时间戳，已跳过`);
+                    continue;
+                }
+
+                let text = contentRaw;
+                try {
+                    const match = contentRaw.match(/"((?:\\.|[^"\\])*)"/);
+                    if (match && match[1]) {
+                        text = match[1].replace(/\\"/g, '"').trim();
+                    }
+                } catch (err) {
+                    console.warn(`第${i+1}行内容引号解析警告：`, err);
+                }
+
+                let sendTime = '【时间格式错误】';
+                try {
+                    const timestamp = Number(timeRaw);
+                    if (!isNaN(timestamp)) {
+                        const adjustedTimestamp = timestamp.toString().length === 10 
+                            ? timestamp * 1000 
+                            : timestamp;
+                        
+                        const date = new Date(adjustedTimestamp);
+                        if (!isNaN(date.getTime())) {
+                            sendTime = date.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+                        } else {
+                            sendTime = `【无效时间戳：${timeRaw}】`;
+                        }
+                    } else {
+                        const date = new Date(timeRaw);
+                        if (!isNaN(date.getTime())) {
+                            sendTime = date.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+                        }
+                    }
+                } catch (err) {
+                    sendTime = `【时间解析失败：${timeRaw}】`;
+                }
+
+                messages.push({ sender, receiver, text, time: sendTime });
+            }
+
+            if (messages.length === 0) {
+                showNotification('文件中无有效聊天记录，请检查数据格式', 'error');
+                return;
+            }
+
+            chatData = {
+                currentUser: messages[0].sender,
+                dialogues: {},
+                receiverList: []
+            };
+
+            messages.forEach(msg => {
+                if (!chatData.dialogues[msg.receiver]) chatData.dialogues[msg.receiver] = [];
+                chatData.dialogues[msg.receiver].push(msg);
+                chatData.dialogues[msg.receiver].sort((a, b) => new Date(a.time) - new Date(b.time));
+            });
+
+            chatData.receiverList = Object.keys(chatData.dialogues).map(receiver => {
+                const msgList = chatData.dialogues[receiver];
+                const lastMsg = msgList[msgList.length - 1];
+                return {
+                    uid: receiver,
+                    lastText: lastMsg.text,
+                    lastTime: lastMsg.time,
+                    lastTimeShort: formatShortTime(lastMsg.time),
+                    lastDate: new Date(lastMsg.time).toDateString(),
+                    messageCount: msgList.length
+                };
+            }).sort((a, b) => new Date(b.lastTime) - new Date(a.lastTime));
+
+            renderReceiverList();
+            document.getElementById('receiverList').classList.remove('hidden');
+            document.getElementById('initialTip').classList.add('hidden');
+            showNotification(`成功加载 ${messages.length} 条聊天记录`, 'success');
+        }
+
+        // 渲染接收者列表
+        function renderReceiverList(filterKey = '') {
+            const container = document.getElementById('receiverItems');
+            container.innerHTML = '';
+            
+            const filteredReceivers = chatData.receiverList.filter(item => 
+                item.uid.toLowerCase().includes(filterKey.toLowerCase()) || 
+                item.lastText.toLowerCase().includes(filterKey.toLowerCase())
+            );
+
+            if (filteredReceivers.length === 0) {
+                container.innerHTML = `
+                    <div class="p-8 text-center text-neutral-400">
+                        <i class="fa fa-search text-3xl mb-2"></i>
+                        <p>未找到匹配的接收者</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filteredReceivers.forEach(item => {
+                const receiverItem = document.createElement('div');
+                receiverItem.className = `p-4 hover:bg-neutral-50 dark:hover:bg-neutral-700 cursor-pointer flex items-center justify-between hover-lift transition-colors duration-200 ${currentReceiver === item.uid ? 'bg-primary/5 dark:bg-primary/10' : ''}`;
+                receiverItem.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                            ${getInitials(item.uid)}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-medium truncate">${item.uid}</div>
+                            <div class="text-sm text-neutral-500 dark:text-neutral-400 truncate max-w-[160px]">${item.lastText}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-neutral-400">${item.lastTimeShort}</div>
+                        ${isToday(item.lastDate) ? '' : `<div class="text-xs text-neutral-400 mt-1">${item.lastDate}</div>`}
+                        <div class="mt-1 text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">${item.messageCount}条</div>
+                    </div>
+                `;
+                receiverItem.onclick = () => renderChatWindow(item.uid);
+                container.appendChild(receiverItem);
+            });
+        }
+
+        // 渲染聊天窗口
+        function renderChatWindow(receiverUid) {
+            currentReceiver = receiverUid;
+            const msgList = chatData.dialogues[receiverUid];
+            const container = document.getElementById('messageContainer');
+            document.getElementById('currentReceiverName').textContent = receiverUid;
+            document.getElementById('chatWindow').classList.remove('hidden');
+            
+            // 移动端优化：隐藏列表，只显示聊天窗口
+            if (window.innerWidth < 768) {
+                document.getElementById('receiverList').classList.add('hidden');
+            }
+            
+            container.innerHTML = '';
+            lastMessageDate = null;
+
+            msgList.forEach((msg, index) => {
+                const currentDate = new Date(msg.time).toDateString();
+                if (currentDate !== lastMessageDate) {
+                    const separator = document.createElement('div');
+                    separator.className = 'flex justify-center';
+                    separator.innerHTML = `
+                        <span class="bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 text-xs px-3 py-1 rounded-full">
+                            ${formatDateForSeparator(msg.time)}
+                        </span>
+                    `;
+                    container.appendChild(separator);
+                    lastMessageDate = currentDate;
+                }
+
+                const isCurrentUser = msg.sender === chatData.currentUser;
+                const messageEl = document.createElement('div');
+                messageEl.className = `flex ${isCurrentUser ? 'justify-end' : 'justify-start'} animate-fadeIn`;
+                
+                // 消息状态指示（最后一条消息显示已读状态）
+                const isLastMessage = index === msgList.length - 1;
+                const statusIndicator = isCurrentUser && isLastMessage 
+                    ? '<i class="fa fa-check-circle message-status"></i>' 
+                    : '';
+
+                messageEl.innerHTML = `
+                    <div class="${isCurrentUser ? 'chat-bubble-sent' : 'chat-bubble-received'}">
+                        <div class="text-sm mb-1 ${isCurrentUser ? 'text-right' : ''} font-medium opacity-80">
+                            ${isCurrentUser ? '我' : msg.sender}
+                        </div>
+                        <div class="whitespace-pre-wrap">${formatMessageText(msg.text)}</div>
+                        <div class="text-xs mt-1 text-gray-300 ${isCurrentUser ? 'text-right' : ''} flex items-center justify-end">
+                            ${formatShortTime(msg.time)}
+                            ${statusIndicator}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(messageEl);
+            });
+
+            // 滚动到底部
+            container.scrollTop = container.scrollHeight;
+            // 更新接收者列表选中状态
+            renderReceiverList(document.getElementById('searchReceiver').value.trim());
+        }
+
+        // 格式化消息文本（添加链接识别）
+        function formatMessageText(text) {
+            // 识别URL并添加链接
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, (url) => {
+                return `<a href="${url}" target="_blank" class="text-primary hover:underline">${url}</a>`;
+            });
+        }
+
+        // 搜索接收者
+        document.getElementById('searchReceiver').addEventListener('input', function(e) {
+            renderReceiverList(e.target.value.trim());
+        });
+
+        // 获取用户名首字母
+        function getInitials(uid) {
+            return uid.charAt(0).toUpperCase();
+        }
+
+        // 格式化短时间
+        function formatShortTime(timeStr) {
+            return timeStr.split(' ')[1].slice(0, 5);
+        }
+
+        // 判断是否是今天
+        function isToday(dateStr) {
+            const today = new Date().toDateString();
+            return dateStr === today;
+        }
+
+        // 格式化日期分隔符
+        function formatDateForSeparator(timeStr) {
+            const date = new Date(timeStr);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            if (date.toDateString() === today.toDateString()) {
+                return '今天';
+            } else if (date.toDateString() === yesterday.toDateString()) {
+                return '昨天';
+            } else {
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const oldNotify = document.querySelector('.notification');
+            if (oldNotify) oldNotify.remove();
+
+            const notify = document.createElement('div');
+            const bgColors = {
+                info: 'bg-primary',
+                success: 'bg-green-500',
+                error: 'bg-red-500'
+            };
+            const icons = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-circle'
+            };
+
+            notify.className = `notification fixed top-4 right-4 ${bgColors[type]} text-white px-4 py-3 rounded-lg shadow-lg flex items-center z-50 transform transition-all duration-300 ease-in-out translate-x-full`;
+            notify.innerHTML = `
+                <i class="fa ${icons[type]} mr-2"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notify);
+
+            setTimeout(() => {
+                notify.classList.remove('translate-x-full');
+            }, 10);
+
+            setTimeout(() => {
+                notify.classList.add('translate-x-full');
+                setTimeout(() => notify.remove(), 300);
+            }, 3000);
+        }
+
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fadeIn {
+                animation: fadeIn 0.3s ease-out forwards;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
