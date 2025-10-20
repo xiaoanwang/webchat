@@ -1,0 +1,300 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2575.6">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px 'Helvetica Neue'; color: #181a1f; -webkit-text-stroke: #181a1f; background-color: #ffffff}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 16.0px 'Helvetica Neue'; color: #181a1f; -webkit-text-stroke: #181a1f; background-color: #ffffff; min-height: 18.0px}
+    span.s1 {font-kerning: none}
+  </style>
+</head>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
+<p class="p1"><span class="s1">&lt;html lang="zh-CN"&gt;</span></p>
+<p class="p1"><span class="s1">&lt;head&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;聊天记录查看器（纯文本内容版）&lt;/title&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"&gt;&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;style type="text/tailwindcss"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>@layer utilities {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>.chat-right { @apply bg-green-500 text-white rounded-lg rounded-tr-none p-3 max-w-[70%] ml-auto; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>.chat-left { @apply bg-gray-200 text-gray-800 rounded-lg rounded-tl-none p-3 max-w-[70%] mr-auto; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>.scroll-hide {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>scrollbar-width: none;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>-ms-overflow-style: none;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>.scroll-hide::-webkit-scrollbar { display: none; }</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
+<p class="p1"><span class="s1">&lt;body class="bg-gray-100 h-screen flex flex-col overflow-hidden"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;header class="bg-gray-800 text-white p-4 flex items-center justify-between"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;h1 class="text-xl font-bold"&gt;聊天记录查看器&lt;/h1&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;input type="file" id="fileUpload" accept=".xlsx, .xls, .csv" class="hidden" /&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;button onclick="document.getElementById('fileUpload').click()"<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;i class="fa fa-upload mr-2"&gt;&lt;/i&gt;上传文件（Excel/CSV）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/button&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/header&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="flex flex-1 overflow-hidden"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="receiverList" class="w-80 bg-white border-r border-gray-200 overflow-y-auto scroll-hide hidden"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="p-3 border-b"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="relative"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"&gt;&lt;/i&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;input type="text" id="searchReceiver" placeholder="搜索接收者..."<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                           </span>class="w-full pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="receiverItems" class="divide-y"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="chatWindow" class="flex-1 flex flex-col bg-gray-50 hidden"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="bg-white border-b border-gray-200 p-4 flex items-center"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;h2 id="currentReceiverName" class="font-medium text-lg"&gt;&lt;/h2&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div id="messageContainer" class="flex-1 p-4 overflow-y-auto scroll-hide space-y-4"&gt;&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;div class="bg-white border-t border-gray-200 p-4 text-center text-gray-500 text-sm"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>聊天记录已加载完毕</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div id="initialTip" class="flex-1 flex flex-col items-center justify-center text-gray-500"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;i class="fa fa-file-text-o text-6xl mb-4 text-blue-500"&gt;&lt;/i&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;p class="text-lg"&gt;请上传包含聊天记录的Excel或CSV文件&lt;/p&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>let chatData = null;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 监听文件上传（支持Excel和CSV）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById('fileUpload').addEventListener('change', function(e) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const file = e.target.files[0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (!file) return;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const fileExt = file.name.split('.').pop().toLowerCase();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (!['xlsx', 'xls', 'csv'].includes(fileExt)) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>alert('请上传Excel（.xlsx/.xls）或CSV（.csv）文件');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 根据文件类型选择解析方式</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (fileExt === 'csv') {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>parseCSV(file);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>parseExcel(file);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 解析Excel文件</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function parseExcel(file) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const reader = new FileReader();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>reader.onload = function(e) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>try {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const data = new Uint8Array(e.target.result);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const workbook = XLSX.read(data, { type: 'array' });</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const firstSheetName = workbook.SheetNames[0];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const worksheet = workbook.Sheets[firstSheetName];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>processData(jsonData); // 统一数据处理逻辑</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>} catch (err) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>console.error('Excel解析失败：', err);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>alert('Excel解析失败，请检查文件格式');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>};</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>reader.readAsArrayBuffer(file);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 解析CSV文件</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function parseCSV(file) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const reader = new FileReader();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>reader.onload = function(e) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>try {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const text = e.target.result;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>// 按行分割CSV（处理换行符）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const lines = text.split(/\r\n|\n/).filter(line =&gt; line.trim() !== '');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>// 转换为二维数组格式</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const jsonData = lines.map(line =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>const columns = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>let inQuotes = false;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>let currentColumn = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>for (const char of line) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>if (char === '"') {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>inQuotes = !inQuotes;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>} else if (char === ',' &amp;&amp; !inQuotes) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>columns.push(currentColumn.trim());</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>currentColumn = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                                </span>currentColumn += char;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>columns.push(currentColumn.trim());</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>return columns;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>processData(jsonData);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>} catch (err) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>console.error('CSV解析失败：', err);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>alert('CSV解析失败，请检查文件格式');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>};</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>reader.readAsText(file, 'UTF-8');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 统一处理解析后的数据（核心修改：第三列改为提取双引号内的纯文本）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function processData(jsonData) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 校验数据格式（至少1行有效数据，4列）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (jsonData.length &lt;= 0 || jsonData[0].length &lt; 4) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>alert('文件格式错误：需包含4列（发送者uid、接收者uid、双引号包裹的内容、13位时间戳）');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const messages = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; jsonData.length; i++) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const row = jsonData[i];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// 跳过空行</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>if (!row[0] || !row[1] || !row[2] || !row[3]) continue;</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// 解析发送者、接收者</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const sender = String(row[0]).trim();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const receiver = String(row[1]).trim();</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// 核心修改：提取第三列中双引号包裹的内容</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>let text = '【无法解析的内容】';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>try {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const contentStr = String(row[2]).trim();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>// 匹配双引号包裹的内容（支持内容中包含转义双引号 \"）</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const match = contentStr.match(/"((?:\\.|[^"\\])*)"/);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>if (match &amp;&amp; match[1]) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>// 还原转义的双引号</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>text = match[1].replace(/\\"/g, '"').trim();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>// 若没有双引号，直接取整列内容</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>text = contentStr;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>} catch (err) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>console.warn(`第${i+1}行内容解析失败：`, err);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>text = `【内容解析错误】`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// 解析13位时间戳为UTC时间</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>let sendTime = '【时间格式错误】';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>try {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>const timestamp = Number(row[3].toString().trim());</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>if (String(timestamp).length === 13 &amp;&amp; !isNaN(timestamp)) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>const date = new Date(timestamp);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>sendTime = date.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>} else {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>sendTime = `【非13位时间戳：${row[3]}】`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>} catch (err) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>sendTime = `【时间解析失败：${row[3]}】`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>messages.push({ sender, receiver, text, time: sendTime });</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>if (messages.length === 0) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>alert('文件中无有效聊天记录');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 整理数据</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>chatData = {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>currentUser: messages[0].sender,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>dialogues: {},</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>receiverList: []</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>};</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 按接收者分组并排序</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>messages.forEach(msg =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>if (!chatData.dialogues[msg.receiver]) chatData.dialogues[msg.receiver] = [];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>chatData.dialogues[msg.receiver].push(msg);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>chatData.dialogues[msg.receiver].sort((a, b) =&gt; new Date(a.time) - new Date(b.time));</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 生成接收者列表</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>chatData.receiverList = Object.keys(chatData.dialogues).map(receiver =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const msgList = chatData.dialogues[receiver];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const lastMsg = msgList[msgList.length - 1];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>return {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>uid: receiver,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>lastText: lastMsg.text,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>lastTime: lastMsg.time,</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>lastTimeShort: lastMsg.time.split(' ')[1]</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>};</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}).sort((a, b) =&gt; new Date(b.lastTime) - new Date(a.lastTime));</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>// 渲染页面</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>renderReceiverList();</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('receiverList').classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('initialTip').classList.add('hidden');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 渲染接收者列表</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderReceiverList(filterKey = '') {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const container = document.getElementById('receiverItems');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>container.innerHTML = '';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const filteredReceivers = chatData.receiverList.filter(item =&gt;<span class="Apple-converted-space"> </span></span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>item.uid.includes(filterKey) || item.lastText.includes(filterKey)</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>filteredReceivers.forEach(item =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const receiverItem = document.createElement('div');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>receiverItem.className = 'p-4 hover:bg-gray-100 cursor-pointer flex items-center justify-between';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>receiverItem.innerHTML = `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="w-56"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="font-medium"&gt;${item.uid}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="text-sm text-gray-500 truncate"&gt;${item.lastText}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="text-xs text-gray-400"&gt;${item.lastTimeShort}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>receiverItem.onclick = () =&gt; renderChatWindow(item.uid);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>container.appendChild(receiverItem);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 渲染聊天窗口</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>function renderChatWindow(receiverUid) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const msgList = chatData.dialogues[receiverUid];</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const container = document.getElementById('messageContainer');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('currentReceiverName').textContent = receiverUid;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>document.getElementById('chatWindow').classList.remove('hidden');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>container.innerHTML = '';</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>msgList.forEach(msg =&gt; {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const isCurrentUser = msg.sender === chatData.currentUser;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>const messageEl = document.createElement('div');</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>messageEl.className = 'flex';</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>messageEl.innerHTML = `</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;div class="${isCurrentUser ? 'chat-right' : 'chat-left'}"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="text-sm mb-1 ${isCurrentUser ? 'text-right' : ''}"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>${isCurrentUser ? '我' : msg.sender}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div&gt;${msg.text}&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;div class="text-xs mt-1 text-gray-300 ${isCurrentUser ? 'text-right' : ''}"&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                            </span>${msg.time}</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>`;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>container.appendChild(messageEl);</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>container.scrollTop = container.scrollHeight;</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s1"></span><br></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// 搜索接收者</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById('searchReceiver').addEventListener('input', function(e) {</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>renderReceiverList(e.target.value.trim());</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
+<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+</body>
+</html>
